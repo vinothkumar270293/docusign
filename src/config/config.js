@@ -61,4 +61,8 @@ module.exports = {
     },
     from: envVars.EMAIL_FROM,
   },
+  boldsign: {
+    host: envVars.BOLD_SIGN_API_HOST,
+    key: envVars.BOLD_SIGN_API_KEY,
+  },
 };
