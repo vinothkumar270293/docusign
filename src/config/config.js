@@ -6,7 +6,7 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const envVarsSchema = Joi.object()
   .keys({
-    NODE_ENV: Joi.string().valid('production', 'development', 'test').required(),
+    NODE_ENV: Joi.string().valid('production', 'development', 'test'),
     PORT: Joi.number().default(3000),
     MONGODB_URL: Joi.string().required().description('Mongo DB url'),
     JWT_SECRET: Joi.string().required().description('JWT secret key'),
@@ -65,4 +65,9 @@ module.exports = {
     host: envVars.BOLD_SIGN_API_HOST,
     key: envVars.BOLD_SIGN_API_KEY,
   },
+  mailgun: {
+    apikey: envVars.MAILGUN_API_KEY,
+    emailDomain: envVars.MAILGUN_EMAIL_DOMAIN,
+    accessKey: envVars.DOCUMENT_ACCESS_KEY,
+  }
 };

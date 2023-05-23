@@ -3,6 +3,9 @@ const authRoute = require('./auth.route');
 const userRoute = require('./user.route');
 const docsRoute = require('./docs.route');
 const documentRoute = require('./document.route');
+const webhookRoute = require('./webhook.route');
+const emailRoute = require('./email.route');
+
 const config = require('../../config/config');
 
 const router = express.Router();
@@ -20,6 +23,14 @@ const defaultRoutes = [
     path: '/document',
     route: documentRoute,
   },
+  {
+    path: '/webhook',
+    route: webhookRoute,
+  },
+  {
+    path: '/email',
+    route: emailRoute,
+  },
 ];
 
 const devRoutes = [
@@ -31,7 +42,7 @@ const devRoutes = [
 ];
 
 defaultRoutes.forEach((route) => {
-  router.use(route.path, route.route);
+    router.use(route.path, route.route);
 });
 
 /* istanbul ignore next */
