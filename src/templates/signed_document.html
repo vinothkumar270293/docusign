@@ -203,15 +203,16 @@
                                   style="font-size: 14px; font-weight: 400"
                                   ><table>
                                     <tbody>
-                                      ${data.document.signers.map(sign => (`
+                                      {{#each document.signerDetails}}
                                       <tr>
-                                        <td style="padding: 10px 0px 0px 0px">
-                                          ${sign.signerName} (<a href="mailto:${sign.signerEmail}" target="_blank"
-                                            >${sign.signerEmail}</a
-                                          >)
+                                        <td style='padding: 10px 0px 0px 0px'>
+                                          {{this.signerName}} (<a
+                                            href='mailto:{{this.signerEmail}}'
+                                            target='_blank'
+                                          >{{this.signerEmail}}</a>)
                                         </td>
                                       </tr>
-                                      `))}
+                                      {{/each}}
                                     </tbody>
                                   </table></span
                                 >

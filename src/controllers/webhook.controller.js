@@ -6,15 +6,18 @@ const bindEvent = catchAsync(async (req, res) => {
 
   const { event, data } = req.body;
 
-  if (event.eventType == 'Signed') {
-    await webhookService.sendSignedEmail({ data });
+  switch (event.eventType) {
+    case 'Signed':
+      await webhookService.sendSignedEmail({ data });
+      break;
+    case 'Sent':
+      await webhookService.sendSignDocumentEmail({ data });
+      break;
+    case 'Completed':
+      await webhookService.sendCompletedEmail({ data });
+      break;
   }
-  if (event.eventType == 'Sent') { 
-    await webhookService.sendSignDocumentEmail({ data });
-  }
-  if(event.eventType == 'Completed') {
-    await webhookService.sendCompletedEmail({ data });
-  }
+
   res.json({ status: true, message: 'Success' });
 });
 
