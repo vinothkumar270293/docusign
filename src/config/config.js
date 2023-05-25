@@ -69,5 +69,8 @@ module.exports = {
     apikey: envVars.MAILGUN_API_KEY,
     emailDomain: envVars.MAILGUN_EMAIL_DOMAIN,
     accessKey: envVars.DOCUMENT_ACCESS_KEY,
+  },
+  website: {
+    host: envVars.WEBSITE_BASE_PATH
   }
 };

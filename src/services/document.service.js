@@ -34,7 +34,7 @@ const sendDocumentFromTamplate = async () => {
   const { documentId } = response.data;
 
   const embeddedSignLinkResponse = await axios.get(
-    `${config.boldsign.host}/v1/document/getEmbeddedSignLink?documentId=${documentId}&signerEmail=${user.signerEmail}&redirectUrl=http://localhost:3000/e-sign/complete`,
+    `${config.boldsign.host}/v1/document/getEmbeddedSignLink?documentId=${documentId}&signerEmail=${user.signerEmail}&redirectUrl=${config.website.host}/e-sign/complete`,
     {
       headers: {
         accept: 'application/json',
@@ -49,7 +49,7 @@ const sendDocumentFromTamplate = async () => {
     from: 'Vakilsearch <doc@esign-inc.vakilsearch.com>',
     to: user.signerEmail,
     subject: 'Review and Sign Document - Vakilsearch',
-    html: templates.signTemplate({signLink: `http://localhost:3000/e-sign/?${signLink.split('?')[1]}}`, user, signerDetails: [user]})
+    html: templates.signTemplate({signLink: `${config.website.host}/e-sign/?${signLink.split('?')[1]}}`, user, signerDetails: [user]})
   };
 
   mailgun.messages().send(data, (error, body) => {
@@ -133,7 +133,7 @@ const sendMutualDocumentFrom = async () => {
   const documentId = response.data?.documentId;
 
   const embeddedSignLinkResponse = await axios.get(
-    `${config.boldsign.host}/v1/document/getEmbeddedSignLink?documentId=${documentId}&signerEmail=${user.signerEmail}&redirectUrl=http://localhost:3000/e-sign/complete`,
+    `${config.boldsign.host}/v1/document/getEmbeddedSignLink?documentId=${documentId}&signerEmail=${user.signerEmail}&redirectUrl=${config.website.host}/e-sign/complete`,
     {
       headers: {
         accept: 'application/json',
@@ -148,7 +148,7 @@ const sendMutualDocumentFrom = async () => {
     from: 'Vakilsearch <doc@esign-inc.vakilsearch.com>',
     to: user.signerEmail,
     subject: 'Review and Sign Document - Vakilsearch',
-    html: templates.signTemplate({signLink: `http://localhost:3000/e-sign/?${signLink.split('?')[1]}}`, user, signerDetails})
+    html: templates.signTemplate({signLink: `${config.website.host}/e-sign/?${signLink.split('?')[1]}}`, user, signerDetails})
   };
 
   mailgun.messages().send(data, (error, body) => {

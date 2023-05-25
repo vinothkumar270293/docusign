@@ -5,6 +5,7 @@ const docsRoute = require('./docs.route');
 const documentRoute = require('./document.route');
 const webhookRoute = require('./webhook.route');
 const emailRoute = require('./email.route');
+const templateRoute = require('./template.route');
 
 const config = require('../../config/config');
 
@@ -31,6 +32,10 @@ const defaultRoutes = [
     path: '/email',
     route: emailRoute,
   },
+  {
+    path: '/template',
+    route: templateRoute,
+  },
 ];
 
 const devRoutes = [
@@ -45,7 +50,7 @@ defaultRoutes.forEach((route) => {
     router.use(route.path, route.route);
 });
 
-/* istanbul ignore next */
+/* Use dev ignore next */
 if (config.env === 'development') {
   devRoutes.forEach((route) => {
     router.use(route.path, route.route);

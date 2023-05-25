@@ -61,7 +61,7 @@ const getAttachmentFile = async (attachment) => {
   return attachmentData;
 };
 
-const createEmbbededDocument = async ({ attachmentData, subject, attachment, signers }) => {
+const createEmbbededDocument = async ({ attachmentData, subject, attachment, fromUser, signers }) => {
   let data = new FormData();
   data.append('Files', Buffer.from(attachmentData), {
     filename: attachment.name,
@@ -85,15 +85,18 @@ const createEmbbededDocument = async ({ attachmentData, subject, attachment, sig
     data.append(`Signers[${index}][Name]`, signUser.signerName);
     data.append(`Signers[${index}][EmailAddress]`, signUser.signerEmail);
     data.append(`Signers[${index}][PrivateMessage]`, subject);
-    data.append(`Signers[${index}][FormFields][0][FieldType]`, `Signature`);
-    data.append(`Signers[${index}][FormFields][0][Id]`, `${signUser.signerEmail.split('@')[0]}_${index}`);
-    data.append(`Signers[${index}][FormFields][0][PageNumber]`, `1`);
-    data.append(`Signers[${index}][FormFields][0][IsRequired]`, `True`);
-    data.append(`Signers[${index}][FormFields][0][Bounds][X]`, `${50 * (index + 1)}`);
-    data.append(`Signers[${index}][FormFields][0][Bounds][Y]`, `${100}`);
-    data.append(`Signers[${index}][FormFields][0][Bounds][Width]`, `200`);
-    data.append(`Signers[${index}][FormFields][0][Bounds][Height]`, `30`);
+    // data.append(`Signers[${index}][FormFields][0][FieldType]`, `Signature`);
+    // data.append(`Signers[${index}][FormFields][0][Id]`, `${signUser.signerEmail.split('@')[0]}_${index}`);
+    // data.append(`Signers[${index}][FormFields][0][PageNumber]`, `1`);
+    // data.append(`Signers[${index}][FormFields][0][IsRequired]`, `True`);
+    // data.append(`Signers[${index}][FormFields][0][Bounds][X]`, `${50 + (index * 100)}`);
+    // data.append(`Signers[${index}][FormFields][0][Bounds][Y]`, `${100}`);
+    // data.append(`Signers[${index}][FormFields][0][Bounds][Width]`, `200`);
+    // data.append(`Signers[${index}][FormFields][0][Bounds][Height]`, `30`);
   }
+
+  data.append(`CC[0][Name]`, fromUser.signerName);
+  data.append(`CC[0][EmailAddress]`, fromUser.signerEmail);
 
   let requestConfig = {
     method: 'post',
@@ -116,8 +119,8 @@ const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers }) => {
     from: `Vakilsearch <support@${config.mailgun.emailDomain}>`,
     to: fromUser.signerEmail,
     subject: 'Create Sign Document - Vakilsearch',
-    html: templates.signTemplate({
-      signLink: sendUrl,
+    html: templates.createSignTemplate({
+      signLink: `${config.website.host}/e-sign/view?${sendUrl.split('?')[1]}`,
       user: {
         ...fromUser,
         roleIndex: 1
@@ -138,7 +141,7 @@ const createAndSendDocument = async (requestData) => {
   const { subject, fromUser, signers, attachment } = emailData;
 
   const attachmentData = await getAttachmentFile(attachment);
-  const { sendUrl } = await createEmbbededDocument({ attachmentData, subject, attachment, signers });
+  const { sendUrl } = await createEmbbededDocument({ ...emailData, attachmentData });
 
   sendDocumentLink({ subject, sendUrl, fromUser, signers });
 };

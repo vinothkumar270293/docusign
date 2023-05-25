@@ -58,7 +58,6 @@ const sendDocumentFromFile = catchAsync(async (req, res) => {
     },
     data,
   };
-  console.log({ requestConfig });
   const response = await axios.request(requestConfig);
 
   res.json({ status: true, data: response.data });

@@ -223,17 +223,14 @@
                                   style="font-size: 14px; font-weight: 400"
                                   ><table>
                                     <tbody>
-                                      <tr>
-                                        {{#each document.signerDetails}}
-                                      </tr>
-
-                                      <tr>
-                                        <td style="padding: 10px 0px 0px 0px">
-                                          {{this.signerName}} (<a href="mailto:{{this.signerEmail}}" target="_blank"
-                                            >{{this.signerEmail}}</a
-                                          >)
-                                        </td>
-                                      </tr>
+                                      {{#each document.signerDetails}}
+                                        <tr>
+                                          <td style="padding: 10px 0px 0px 0px">
+                                            {{this.signerName}} (<a href="mailto:{{this.signerEmail}}" target="_blank"
+                                              >{{this.signerEmail}}</a
+                                            >)
+                                          </td>
+                                        </tr>
                                       {{/each}}
                                     </tbody>
                                   </table></span
@@ -275,7 +272,7 @@
                                                 style="background: #ffd000; border-radius: 4px"
                                               >
                                                 <a
-                                                  href={{document.documentLink}}
+                                                  href="{{document.documentLink}}"
                                                   style="
                                                     font-family: Roboto, Arial;
                                                     font-weight: bold;
