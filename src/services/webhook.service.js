@@ -15,6 +15,22 @@ const getDocumentFile = async (documentId) => {
   return signedDocumentData;
 };
 
+const getViewDocumentLink = async ({documentId, signerEmail}) => {
+  const embeddedSignLinkResponse = await axios.get(
+    `${config.boldsign.host}/v1/document/getEmbeddedSignLink?documentId=${documentId}&signerEmail=${signerEmail}&redirectUrl=${config.website.host}/e-sign/complete`,
+    {
+      headers: {
+        accept: 'application/json',
+        'X-API-KEY': config.boldsign.key,
+        'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
+      },
+    }
+  );
+  const signLink = embeddedSignLinkResponse.data?.signLink;
+
+  return signLink;
+}
+
 const getAuditFile = async (documentId) => {
   const response = await axios.get(`${config.boldsign.host}/v1/document/downloadauditlog?documentId=${documentId}`, {
     headers: {
@@ -29,11 +45,24 @@ const sendSignedEmail = async ({ data }) => {
 
   const signedDocumentData = await getDocumentFile(data.documentId);
 
+  const signer = data.signerDetails
+  .filter(signer => signer.status === "Completed")
+  .reduce((firstSigner, currentSigner) => {
+    if (!firstSigner || currentSigner.lastActivityDate > firstSigner.lastActivityDate) {
+      return currentSigner;
+    }
+    return firstSigner;
+  }, null);
+
+  if(!signer) return;
+
+  const documentLink = await getViewDocumentLink({documentId: data.documentId, signerEmail: signer.signerEmail});
+
   const requestData = {
     from: `Vakilsearch <doc@${config.mailgun.emailDomain}>`,
-    to: data.signerDetails[0].signerEmail,
+    to: signer.signerEmail,
     subject: `You have successfully signed ${data.messageTitle} - Vakilsearch`,
-    html: templates.signedDocumentTemplate({ document: data }),
+    html: templates.signedDocumentTemplate({ document: data, documentLink: `${config.website.host}/e-sign/?${documentLink.split('?')[1]}}` }),
     attachment: new mailgun.Attachment({
       data: signedDocumentData,
       filename: 'signed_document.pdf',
@@ -50,29 +79,6 @@ const sendSignedEmail = async ({ data }) => {
 
   return true;
 };
-
-/*
-{
-  "signerDetails": [
-    {
-      "signerName": "Dinesh I",
-      "signerRole": "",
-      "signerEmail": "dinesh20003456@gmail.com",
-      "status": "NotCompleted",
-      "enableAccessCode": false,
-      "isAuthenticationFailed": null,
-      "enableEmailOTP": false,
-      "isDeliveryFailed": false,
-      "isViewed": false,
-      "order": 1,
-      "signerType": "Signer",
-      "isReassigned": false,
-      "reassignMessage": null,
-      "declineMessage": null
-    }
-  ]
-}
-*/
 
 const sendSignDocumentEmail = async ({ data }) => {
   const { signerDetails } = data;

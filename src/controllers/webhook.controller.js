@@ -16,6 +16,8 @@ const bindEvent = catchAsync(async (req, res) => {
     case 'Completed':
       await webhookService.sendCompletedEmail({ data });
       break;
+    default:
+      break;
   }
 
   res.json({ status: true, message: 'Success' });
