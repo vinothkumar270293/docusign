@@ -81,7 +81,7 @@ const sendSignedEmail = async ({ data }) => {
 };
 
 const sendSignDocumentEmail = async ({ data }) => {
-  const { signerDetails } = data;
+  const { signerDetails, ccDetails } = data;
   for (let signer of signerDetails) {
     const embeddedSignLinkResponse = await axios.get(
       `${config.boldsign.host}/v1/document/getEmbeddedSignLink?documentId=${data.documentId}&signerEmail=${signer.signerEmail}&redirectUrl=${config.website.host}/e-sign/complete`,
@@ -102,6 +102,10 @@ const sendSignDocumentEmail = async ({ data }) => {
         signLink: `${config.website.host}/e-sign/?${signLink.split('?')[1]}}`,
         user: signer,
         signerDetails,
+        senderDetails: [{
+          senderName:  "",
+          senderEmail: ccDetails[0]?.emailAddress
+        }]
       }),
     };
 
