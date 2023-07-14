@@ -3,6 +3,7 @@ const axios = require('axios');
 const mailgun = require('../config/emailer');
 const config = require('../config/config');
 const templates = require('../templates');
+const logger = require('../config/logger');
 
 const getDocumentFile = async (documentId) => {
   const response = await axios.get(`${config.boldsign.host}/v1/document/download?documentId=${documentId}`, {
@@ -16,19 +17,26 @@ const getDocumentFile = async (documentId) => {
 };
 
 const getViewDocumentLink = async ({documentId, signerEmail}) => {
-  const embeddedSignLinkResponse = await axios.get(
-    `${config.boldsign.host}/v1/document/getEmbeddedSignLink?documentId=${documentId}&signerEmail=${signerEmail}&redirectUrl=${config.website.host}/e-sign/complete`,
-    {
-      headers: {
-        accept: 'application/json',
-        'X-API-KEY': config.boldsign.key,
-        'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
-      },
-    }
-  );
-  const signLink = embeddedSignLinkResponse.data?.signLink;
-
-  return signLink;
+  try {
+    const embeddedSignLinkResponse = await axios.get(
+      `${config.boldsign.host}/v1/document/getEmbeddedSignLink?documentId=${documentId}&signerEmail=${signerEmail}&redirectUrl=${config.website.host}/e-sign/complete`,
+      {
+        headers: {
+          accept: 'application/json',
+          'X-API-KEY': config.boldsign.key,
+          'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
+        },
+      }
+    );
+    const signLink = embeddedSignLinkResponse.data?.signLink;
+    return signLink;
+  } catch (error) {
+    if(error.response)
+      logger.error(JSON.stringify(error.response.data));
+    else
+      logger.error(error.message);
+    return "";
+  }
 }
 
 const getAuditFile = async (documentId) => {
@@ -121,8 +129,6 @@ const sendSignDocumentEmail = async ({ data }) => {
 
 const sendCompletedEmail = async ({ data }) => {
   const { signerDetails, ccDetails, documentId } = data;
-
-  if (signerDetails.length < 2) return;
 
   const signedUsers = signerDetails.filter((signer) => signer.status == 'Completed');
 
