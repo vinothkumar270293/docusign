@@ -14,7 +14,7 @@ const templates = require('../templates');
 
 const baseDir = path.resolve(__dirname, '..');
 
-export const extractNameFromEmail = (email) => {
+const extractNameFromEmail = (email) => {
   const name = email.replace(/"/g, '').trim();
   return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
 };
@@ -166,4 +166,5 @@ const createAndSendDocument = async (requestData) => {
 
 module.exports = {
   createAndSendDocument,
+  extractNameFromEmail
 };
