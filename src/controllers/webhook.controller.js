@@ -5,8 +5,6 @@ const logger = require('../config/logger');
 const { webhookService } = require('../services');
 
 const bindEvent = catchAsync(async (req, res) => {
-  logger.debug('=== Webhook Bind ===');
-  logger.debug(JSON.stringify(req.body));
 
   const { event, data } = req.body;
 
@@ -16,6 +14,9 @@ const bindEvent = catchAsync(async (req, res) => {
   } catch (error) {
     //
   }
+
+  logger.log('=== Webhook Bind ===');
+  logger.log(JSON.stringify(req.body));
 
   switch (event.eventType) {
     case 'Signed':
