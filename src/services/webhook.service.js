@@ -114,7 +114,7 @@ const sendSignDocumentEmail = async ({ data }) => {
     const requestConfig = {
       from: 'Magicsign <support@esign-inc.vakilsearch.com>',
       to: signer.signerEmail,
-      subject: `Review and Sign ${metaData.document.name || messageTitle} - Magicsign`,
+      subject: `Review and Sign ${metaData?.document?.name || messageTitle} - Magicsign`,
       html: templates.signTemplate({
         signLink: `${config.website.host}/e-sign/?${signLink.split('?')[1]}}`,
         user: signer,

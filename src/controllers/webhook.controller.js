@@ -10,7 +10,7 @@ const bindEvent = catchAsync(async (req, res) => {
 
   try {
     const parsed = JSON.parse(data.documentDescription);
-    data.metaDeta = parsed;
+    data.metaData = parsed;
   } catch (error) {
     //
   }
