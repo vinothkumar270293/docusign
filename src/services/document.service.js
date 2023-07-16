@@ -1,6 +1,9 @@
 const axios = require('axios');
+
 const config = require('../config/config');
 const mailgun = require('../config/emailer');
+const logger = require('../config/logger');
+
 const templates = require('../templates');
 
 const sendDocumentFromTamplate = async () => {
@@ -12,12 +15,10 @@ const sendDocumentFromTamplate = async () => {
 
   const response = await axios.post(
     `${config.boldsign.host}/v1/template/send`,
-    { 
-      roles: [
-        user
-      ],
+    {
+      roles: [user],
       disableEmails: true,
-      brandId: '24f92e35-a779-4418-8e1b-54d0ca85ecc0'
+      brandId: '24f92e35-a779-4418-8e1b-54d0ca85ecc0',
     },
     {
       params: {
@@ -49,15 +50,16 @@ const sendDocumentFromTamplate = async () => {
     from: 'Vakilsearch <doc@esign-inc.vakilsearch.com>',
     to: user.signerEmail,
     subject: 'Review and Sign Document - Vakilsearch',
-    html: templates.signTemplate({signLink: `${config.website.host}/e-sign/?${signLink.split('?')[1]}}`, user, signerDetails: [user]})
+    html: templates.signTemplate({
+      signLink: `${config.website.host}/e-sign/?${signLink.split('?')[1]}}`,
+      user,
+      signerDetails: [user],
+    }),
   };
 
   mailgun.messages().send(data, (error, body) => {
-    if (error) {
-      console.error(error);
-    } else {
-      console.log('Email sent successfully:', body);
-    }
+    if (error) logger.error(error);
+    else logger.debug('Email sent successfully:', body);
   });
 
   return response.data;
@@ -100,7 +102,6 @@ const sendDocumentFromFile = async () => {
 };
 
 const sendMutualDocumentFrom = async () => {
-
   const user = {
     roleIndex: 1,
     signerName: 'Dinesh',
@@ -109,12 +110,10 @@ const sendMutualDocumentFrom = async () => {
 
   const response = await axios.post(
     `${config.boldsign.host}/v1/template/send`,
-    { 
-      roles: [
-        user
-      ],
+    {
+      roles: [user],
       disableEmails: true,
-      brandId: '24f92e35-a779-4418-8e1b-54d0ca85ecc0'
+      brandId: '24f92e35-a779-4418-8e1b-54d0ca85ecc0',
     },
     {
       params: {
@@ -143,19 +142,23 @@ const sendMutualDocumentFrom = async () => {
     }
   );
   const signLink = embeddedSignLinkResponse.data?.signLink;
-  
+
   const data = {
     from: 'Vakilsearch <doc@esign-inc.vakilsearch.com>',
     to: user.signerEmail,
     subject: 'Review and Sign Document - Vakilsearch',
-    html: templates.signTemplate({signLink: `${config.website.host}/e-sign/?${signLink.split('?')[1]}}`, user, signerDetails})
+    html: templates.signTemplate({
+      signLink: `${config.website.host}/e-sign/?${signLink.split('?')[1]}}`,
+      user,
+      signerDetails,
+    }),
   };
 
   mailgun.messages().send(data, (error, body) => {
     if (error) {
-      console.error(error);
+      logger.error(error);
     } else {
-      console.log('Email sent successfully:', body);
+      logger.debug('Email sent successfully:', body);
     }
   });
 
@@ -165,5 +168,5 @@ const sendMutualDocumentFrom = async () => {
 module.exports = {
   sendDocumentFromTamplate,
   sendDocumentFromFile,
-  sendMutualDocumentFrom
+  sendMutualDocumentFrom,
 };

@@ -1,11 +1,21 @@
 const catchAsync = require('../utils/catchAsync');
+
+const logger = require('../config/logger');
+
 const { webhookService } = require('../services');
 
 const bindEvent = catchAsync(async (req, res) => {
-  console.log('=== Webhook Bind ===');
-  console.log(JSON.stringify(req.body));
+  logger.debug('=== Webhook Bind ===');
+  logger.debug(JSON.stringify(req.body));
 
   const { event, data } = req.body;
+
+  try {
+    const parsed = JSON.parse(data.documentDescription);
+    data.metaDeta = parsed;
+  } catch (error) {
+    //
+  }
 
   switch (event.eventType) {
     case 'Signed':

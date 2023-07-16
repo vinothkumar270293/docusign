@@ -3,8 +3,10 @@ const moment = require('moment');
 
 const mailgun = require('../config/emailer');
 const config = require('../config/config');
-const templates = require('../templates');
 const logger = require('../config/logger');
+
+const templates = require('../templates');
+
 const { extractNameFromEmail } = require('./mail.service');
 
 const getDocumentFile = async (documentId) => {
@@ -50,6 +52,7 @@ const getAuditFile = async (documentId) => {
 };
 
 const sendSignedEmail = async ({ data }) => {
+  const { metaData } = data;
   const signedDocumentData = await getDocumentFile(data.documentId);
 
   const signer = data.signerDetails
@@ -65,33 +68,32 @@ const sendSignedEmail = async ({ data }) => {
 
   const documentLink = await getViewDocumentLink({ documentId: data.documentId, signerEmail: signer.signerEmail });
 
+  const documentPrefix = `${metaData?.document.name ? `${metaData?.document.name}_` : ''}`;
+
   const requestData = {
-    from: `Vakilsearch <doc@${config.mailgun.emailDomain}>`,
+    from: `Magicsign <doc@${config.mailgun.emailDomain}>`,
     to: signer.signerEmail,
-    subject: `You have successfully signed ${data.messageTitle} - Vakilsearch`,
+    subject: `You have successfully signed ${data.messageTitle} - Magicsign`,
     html: templates.signedDocumentTemplate({
       document: data,
       documentLink: `${config.website.host}/e-sign/?${documentLink.split('?')[1]}}`,
     }),
     attachment: new mailgun.Attachment({
       data: signedDocumentData,
-      filename: 'signed_document.pdf',
+      filename: `${documentPrefix}signed.pdf`,
     }),
   };
 
   mailgun.messages().send(requestData, (error, body) => {
-    if (error) {
-      console.error(error);
-    } else {
-      console.log('Email sent successfully:', body);
-    }
+    if (error) logger.error(error);
+    else logger.debug('Email sent successfully:', body);
   });
 
   return true;
 };
 
 const sendSignDocumentEmail = async ({ data }) => {
-  const { signerDetails, ccDetails } = data;
+  const { signerDetails, ccDetails, metaData } = data;
   for (let signer of signerDetails) {
     const embeddedSignLinkResponse = await axios.get(
       `${config.boldsign.host}/v1/document/getEmbeddedSignLink?documentId=${data.documentId}&signerEmail=${signer.signerEmail}&redirectUrl=${config.website.host}/e-sign/complete`,
@@ -104,12 +106,6 @@ const sendSignDocumentEmail = async ({ data }) => {
       }
     );
     const signLink = embeddedSignLinkResponse.data?.signLink;
-
-    let metaData = null;
-
-    try {
-      metaData = JSON.parse(data.documentDescription);
-    } catch (error) {}
 
     let message = `Review and Sign Document`;
 
@@ -137,17 +133,14 @@ const sendSignDocumentEmail = async ({ data }) => {
     };
 
     mailgun.messages().send(requestConfig, (error, body) => {
-      if (error) {
-        console.error(error);
-      } else {
-        console.log('Email sent successfully:', body);
-      }
+      if (error) logger.error(error);
+      else logger.debug('Email sent successfully:', body);
     });
   }
 };
 
 const sendCompletedEmail = async ({ data }) => {
-  const { signerDetails, ccDetails, documentId } = data;
+  const { signerDetails, ccDetails, documentId, metaData } = data;
 
   const signedUsers = signerDetails.filter((signer) => signer.status == 'Completed');
 
@@ -159,6 +152,7 @@ const sendCompletedEmail = async ({ data }) => {
 
   if (ccuser) users.push({ signerEmail: ccuser.emailAddress, signerName: ccuser.emailAddress.split('@')[0] });
 
+  const documentPrefix = `${metaData?.document.name ? `${metaData?.document.name}_` : ''}`;
   for (let user of users) {
     const requestConfig = {
       from: `Vakilsearch <support@${config.mailgun.emailDomain}>`,
@@ -175,21 +169,18 @@ const sendCompletedEmail = async ({ data }) => {
       attachment: [
         new mailgun.Attachment({
           data: signedDocumentData,
-          filename: 'signed_document.pdf',
+          filename: `${documentPrefix}signed_document.pdf`,
         }),
         new mailgun.Attachment({
           data: auditDocumentData,
-          filename: 'auditlog.pdf',
+          filename: `${documentPrefix}auditlog.pdf`,
         }),
       ],
     };
 
     mailgun.messages().send(requestConfig, (error, body) => {
-      if (error) {
-        console.error(error);
-      } else {
-        console.log('Email sent successfully:', body);
-      }
+      if (error) logger.error(error);
+      else logger.debug('Email sent successfully:', body);
     });
   }
 };

@@ -30,20 +30,15 @@ const extractUser = (email) => {
 
 const parseEmailData = (requestData) => {
   const { Cc, attachments, Subject } = requestData;
-
   const From = requestData?.from || requestData?.From;
+
   if (!From) throw new ApiError(httpStatus.BAD_REQUEST, 'Sender details not found');
 
   const fromUser = extractUser(From);
 
-  const signers = [];
+  const signers = Cc.split(',').map((email) => extractUser(email));
 
-  const fromCcs = Cc.split(',');
-  if (fromCcs)
-    fromCcs.forEach((email) => {
-      signers.push(extractUser(email));
-    });
-  if (signers.length == 0) throw new ApiError(httpStatus.BAD_REQUEST, 'Include atleast one receiver');
+  if (signers.length === 0) throw new ApiError(httpStatus.BAD_REQUEST, 'Include at least one receiver');
 
   const attachment = attachments ? JSON.parse(attachments)[0] : null;
   if (!attachment) throw new ApiError(httpStatus.BAD_REQUEST, 'Attachment not found');
@@ -52,7 +47,7 @@ const parseEmailData = (requestData) => {
 };
 
 const getAttachmentFile = async (attachment) => {
-  let fileRequestConfig = {
+  const fileRequestConfig = {
     method: 'get',
     maxBodyLength: Infinity,
     url: attachment.url,
@@ -63,12 +58,11 @@ const getAttachmentFile = async (attachment) => {
   };
 
   const response = await axios.request(fileRequestConfig);
-  const attachmentData = response.data;
-  return attachmentData;
+  return response.data;
 };
 
-const createEmbbededDocument = async ({ attachmentData, subject, attachment, fromUser, signers, metaDetails }) => {
-  let data = new FormData();
+const createEmbeddedDocument = async ({ attachmentData, subject, attachment, fromUser, signers, metaDetails }) => {
+  const data = new FormData();
   data.append('Files', Buffer.from(attachmentData), {
     filename: attachment.name,
     contentType: attachment['content-type'],
@@ -89,17 +83,16 @@ const createEmbbededDocument = async ({ attachmentData, subject, attachment, fro
   data.append('senderDetail.name', fromUser.signerName);
   data.append('senderDetail,emailAddress', fromUser.signerEmail);
 
-  for (let index = 0; index < signers.length; index++) {
-    const signUser = signers[index];
+  signers.forEach((signUser, index) => {
     data.append(`Signers[${index}][Name]`, signUser.signerName);
     data.append(`Signers[${index}][EmailAddress]`, signUser.signerEmail);
     data.append(`Signers[${index}][PrivateMessage]`, subject);
-  }
+  });
 
   data.append(`CC[0][Name]`, fromUser.signerName);
   data.append(`CC[0][EmailAddress]`, fromUser.signerEmail);
 
-  let requestConfig = {
+  const requestConfig = {
     method: 'post',
     maxBodyLength: Infinity,
     url: `${config.boldsign.host}/v1/document/createEmbeddedRequestUrl`,
@@ -111,7 +104,6 @@ const createEmbbededDocument = async ({ attachmentData, subject, attachment, fro
   };
 
   const documentResponse = await axios.request(requestConfig);
-
   return documentResponse.data;
 };
 
@@ -154,17 +146,17 @@ const createAndSendDocument = async (requestData) => {
       email: fromUser.signerEmail,
     },
     document: {
-      name: toTitleCase(attachment.name.split(".")?.[0] || "NA"),
+      name: toTitleCase(attachment.name.split('.')?.[0] || 'NA'),
     },
   };
 
   const attachmentData = await getAttachmentFile(attachment);
-  const { sendUrl } = await createEmbbededDocument({ ...emailData, metaDetails, attachmentData });
+  const { sendUrl } = await createEmbeddedDocument({ ...emailData, metaDetails, attachmentData });
 
   sendDocumentLink({ metaDetails, subject, sendUrl, fromUser, signers });
 };
 
 module.exports = {
   createAndSendDocument,
-  extractNameFromEmail
+  extractNameFromEmail,
 };
