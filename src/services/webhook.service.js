@@ -1,4 +1,5 @@
 const axios = require('axios');
+const moment = require('moment');
 
 const mailgun = require('../config/emailer');
 const config = require('../config/config');
@@ -16,7 +17,7 @@ const getDocumentFile = async (documentId) => {
   return signedDocumentData;
 };
 
-const getViewDocumentLink = async ({documentId, signerEmail}) => {
+const getViewDocumentLink = async ({ documentId, signerEmail }) => {
   try {
     const embeddedSignLinkResponse = await axios.get(
       `${config.boldsign.host}/v1/document/getEmbeddedSignLink?documentId=${documentId}&signerEmail=${signerEmail}&redirectUrl=${config.website.host}/e-sign/complete`,
@@ -31,13 +32,11 @@ const getViewDocumentLink = async ({documentId, signerEmail}) => {
     const signLink = embeddedSignLinkResponse.data?.signLink;
     return signLink;
   } catch (error) {
-    if(error.response)
-      logger.error(JSON.stringify(error.response.data));
-    else
-      logger.error(error.message);
-    return "";
+    if (error.response) logger.error(JSON.stringify(error.response.data));
+    else logger.error(error.message);
+    return '';
   }
-}
+};
 
 const getAuditFile = async (documentId) => {
   const response = await axios.get(`${config.boldsign.host}/v1/document/downloadauditlog?documentId=${documentId}`, {
@@ -50,27 +49,29 @@ const getAuditFile = async (documentId) => {
 };
 
 const sendSignedEmail = async ({ data }) => {
-
   const signedDocumentData = await getDocumentFile(data.documentId);
 
   const signer = data.signerDetails
-  .filter(signer => signer.status === "Completed")
-  .reduce((firstSigner, currentSigner) => {
-    if (!firstSigner || currentSigner.lastActivityDate > firstSigner.lastActivityDate) {
-      return currentSigner;
-    }
-    return firstSigner;
-  }, null);
+    .filter((signer) => signer.status === 'Completed')
+    .reduce((firstSigner, currentSigner) => {
+      if (!firstSigner || currentSigner.lastActivityDate > firstSigner.lastActivityDate) {
+        return currentSigner;
+      }
+      return firstSigner;
+    }, null);
 
-  if(!signer) return;
+  if (!signer) return;
 
-  const documentLink = await getViewDocumentLink({documentId: data.documentId, signerEmail: signer.signerEmail});
+  const documentLink = await getViewDocumentLink({ documentId: data.documentId, signerEmail: signer.signerEmail });
 
   const requestData = {
     from: `Vakilsearch <doc@${config.mailgun.emailDomain}>`,
     to: signer.signerEmail,
     subject: `You have successfully signed ${data.messageTitle} - Vakilsearch`,
-    html: templates.signedDocumentTemplate({ document: data, documentLink: `${config.website.host}/e-sign/?${documentLink.split('?')[1]}}` }),
+    html: templates.signedDocumentTemplate({
+      document: data,
+      documentLink: `${config.website.host}/e-sign/?${documentLink.split('?')[1]}}`,
+    }),
     attachment: new mailgun.Attachment({
       data: signedDocumentData,
       filename: 'signed_document.pdf',
@@ -102,18 +103,30 @@ const sendSignDocumentEmail = async ({ data }) => {
       }
     );
     const signLink = embeddedSignLinkResponse.data?.signLink;
+
+    let message = `Review and Sign Document`;
+    try {
+      const parsed = JSON.parse(data.documentDescription);
+      if (parsed) message = `${parsed.sender.name} has requested to e-sign the ${parsed.document.name}`;
+    } catch (error) {}
+
     const requestConfig = {
-      from: 'Vakilsearch <support@esign-inc.vakilsearch.com>',
+      from: 'Magicsign <support@esign-inc.vakilsearch.com>',
       to: signer.signerEmail,
-      subject: 'Review and Sign Document - Vakilsearch',
+      subject: `Review and Sign ${data.title} - Magicsign`,
       html: templates.signTemplate({
         signLink: `${config.website.host}/e-sign/?${signLink.split('?')[1]}}`,
         user: signer,
         signerDetails,
-        senderDetails: [{
-          senderName:  "",
-          senderEmail: ccDetails[0]?.emailAddress
-        }]
+        senderDetails: [
+          {
+            senderName: '',
+            senderEmail: ccDetails[0]?.emailAddress,
+          },
+        ],
+        expiryDate: moment.unix(data.expiryDate).format('DD-MM-YYYY HH:mm'),
+        title: data.messageTitle,
+        message,
       }),
     };
 

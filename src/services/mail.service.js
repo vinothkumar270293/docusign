@@ -2,21 +2,27 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const FormData = require('form-data');
+const httpStatus = require('http-status');
 
 const ApiError = require('../utils/ApiError');
-const httpStatus = require('http-status');
-const logger = require('../config/logger');
+const { toTitleCase } = require('../utils');
 
+const logger = require('../config/logger');
 const config = require('../config/config');
 const mailgun = require('../config/emailer');
 const templates = require('../templates');
 
 const baseDir = path.resolve(__dirname, '..');
 
+const extractNameFromEmail = (email) => {
+  const name = email.replace(/"/g, '').trim();
+  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+};
+
 const extractUser = (email) => {
   const splitted = email.includes('&lt;') ? email.split('&lt;') : email.split('<');
   const signUser = {
-    signerName: (splitted[1] == null ? splitted[0].split('@')[0] : splitted[0]).replace(/"/g, '').trim(),
+    signerName: splitted[1] == null ? splitted[0].split('@')[0] : extractNameFromEmail(splitted[0]),
     signerEmail: (splitted[1] || splitted[0]).replace(/"/g, '').replace(/>/g, '').trim(),
   };
   return signUser;
@@ -67,6 +73,17 @@ const createEmbbededDocument = async ({ attachmentData, subject, attachment, fro
     filename: attachment.name,
     contentType: attachment['content-type'],
   });
+
+  const metaDetails = {
+    sender: {
+      name: fromUser.signerName,
+      email: fromUser.signerEmail,
+    },
+    document: {
+      name: toTitleCase(attachment.name)
+    }
+  };
+
   data.append('Title', subject);
   data.append('ShowToolbar', 'true');
   data.append('ShowNavigationButtons', 'true');
@@ -76,23 +93,17 @@ const createEmbbededDocument = async ({ attachmentData, subject, attachment, fro
   data.append('SendViewOption', 'PreparePage');
   data.append('disableEmails', 'true');
   data.append('Locale', 'EN');
-  // data.append('RedirectUrl', 'https://boldsign.dev/sign/redirect');
-  data.append('Message', subject);
+  data.append('RedirectUrl', `${config.website.host}/e-sign/complete`);
+  data.append('Message', JSON.stringify(metaDetails));
   data.append('EnableSigningOrder', 'false');
+  data.append('senderDetail.name', fromUser.signerName);
+  data.append('senderDetail,emailAddress', fromUser.signerEmail);
 
   for (let index = 0; index < signers.length; index++) {
     const signUser = signers[index];
     data.append(`Signers[${index}][Name]`, signUser.signerName);
     data.append(`Signers[${index}][EmailAddress]`, signUser.signerEmail);
     data.append(`Signers[${index}][PrivateMessage]`, subject);
-    // data.append(`Signers[${index}][FormFields][0][FieldType]`, `Signature`);
-    // data.append(`Signers[${index}][FormFields][0][Id]`, `${signUser.signerEmail.split('@')[0]}_${index}`);
-    // data.append(`Signers[${index}][FormFields][0][PageNumber]`, `1`);
-    // data.append(`Signers[${index}][FormFields][0][IsRequired]`, `True`);
-    // data.append(`Signers[${index}][FormFields][0][Bounds][X]`, `${50 + (index * 100)}`);
-    // data.append(`Signers[${index}][FormFields][0][Bounds][Y]`, `${100}`);
-    // data.append(`Signers[${index}][FormFields][0][Bounds][Width]`, `200`);
-    // data.append(`Signers[${index}][FormFields][0][Bounds][Height]`, `30`);
   }
 
   data.append(`CC[0][Name]`, fromUser.signerName);
@@ -116,16 +127,22 @@ const createEmbbededDocument = async ({ attachmentData, subject, attachment, fro
 
 const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers }) => {
   const emailConfig = {
-    from: `Vakilsearch <support@${config.mailgun.emailDomain}>`,
+    from: `Magicsign <support@${config.mailgun.emailDomain}>`,
     to: fromUser.signerEmail,
-    subject: 'Create Sign Document - Vakilsearch',
+    subject: 'Create Sign Markers - Magicsign',
     html: templates.createSignTemplate({
       signLink: `${config.website.host}/e-sign/view?${sendUrl.split('?')[1]}`,
       user: {
         ...fromUser,
-        roleIndex: 1
+        roleIndex: 1,
       },
       signerDetails: signers,
+      senderDetails: [
+        {
+          senderName: fromUser.signerEmail,
+          senderEmail: fromUser.signerName,
+        },
+      ],
       subject,
     }),
   };
