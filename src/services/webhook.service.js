@@ -5,6 +5,7 @@ const mailgun = require('../config/emailer');
 const config = require('../config/config');
 const templates = require('../templates');
 const logger = require('../config/logger');
+const { extractNameFromEmail } = require('./mail.service');
 
 const getDocumentFile = async (documentId) => {
   const response = await axios.get(`${config.boldsign.host}/v1/document/download?documentId=${documentId}`, {
@@ -104,29 +105,34 @@ const sendSignDocumentEmail = async ({ data }) => {
     );
     const signLink = embeddedSignLinkResponse.data?.signLink;
 
-    let message = `Review and Sign Document`;
+    let metaData = null;
+
     try {
-      const parsed = JSON.parse(data.documentDescription);
-      if (parsed) message = `${parsed.sender.name} has requested to e-sign the ${parsed.document.name}`;
+      metaData = JSON.parse(data.documentDescription);
     } catch (error) {}
+
+    let message = `Review and Sign Document`;
+
+    if (metaData) message = `${metaData.sender.name} has requested to e-sign the ${metaData.document.name}`;
 
     const requestConfig = {
       from: 'Magicsign <support@esign-inc.vakilsearch.com>',
       to: signer.signerEmail,
-      subject: `Review and Sign ${data.title} - Magicsign`,
+      subject: `Review and Sign ${metaData.document.name || messageTitle} - Magicsign`,
       html: templates.signTemplate({
         signLink: `${config.website.host}/e-sign/?${signLink.split('?')[1]}}`,
         user: signer,
         signerDetails,
         senderDetails: [
           {
-            senderName: '',
-            senderEmail: ccDetails[0]?.emailAddress,
+            senderName: metaData.sender?.name || extractNameFromEmail(metaData.sender?.name),
+            senderEmail: metaData.sender?.email || ccDetails[0]?.emailAddress,
           },
         ],
         expiryDate: moment.unix(data.expiryDate).format('DD-MM-YYYY HH:mm'),
         title: data.messageTitle,
         message,
+        ...metaData,
       }),
     };
 

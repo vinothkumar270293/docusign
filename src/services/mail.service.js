@@ -14,7 +14,7 @@ const templates = require('../templates');
 
 const baseDir = path.resolve(__dirname, '..');
 
-const extractNameFromEmail = (email) => {
+export const extractNameFromEmail = (email) => {
   const name = email.replace(/"/g, '').trim();
   return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
 };
@@ -67,22 +67,12 @@ const getAttachmentFile = async (attachment) => {
   return attachmentData;
 };
 
-const createEmbbededDocument = async ({ attachmentData, subject, attachment, fromUser, signers }) => {
+const createEmbbededDocument = async ({ attachmentData, subject, attachment, fromUser, signers, metaDetails }) => {
   let data = new FormData();
   data.append('Files', Buffer.from(attachmentData), {
     filename: attachment.name,
     contentType: attachment['content-type'],
   });
-
-  const metaDetails = {
-    sender: {
-      name: fromUser.signerName,
-      email: fromUser.signerEmail,
-    },
-    document: {
-      name: toTitleCase(attachment.name)
-    }
-  };
 
   data.append('Title', subject);
   data.append('ShowToolbar', 'true');
@@ -125,7 +115,7 @@ const createEmbbededDocument = async ({ attachmentData, subject, attachment, fro
   return documentResponse.data;
 };
 
-const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers }) => {
+const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers, metaDetails }) => {
   const emailConfig = {
     from: `Magicsign <support@${config.mailgun.emailDomain}>`,
     to: fromUser.signerEmail,
@@ -143,6 +133,7 @@ const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers }) => {
           senderEmail: fromUser.signerName,
         },
       ],
+      ...metaDetails,
       subject,
     }),
   };
@@ -157,10 +148,20 @@ const createAndSendDocument = async (requestData) => {
   const emailData = parseEmailData(requestData);
   const { subject, fromUser, signers, attachment } = emailData;
 
-  const attachmentData = await getAttachmentFile(attachment);
-  const { sendUrl } = await createEmbbededDocument({ ...emailData, attachmentData });
+  const metaDetails = {
+    sender: {
+      name: fromUser.signerName,
+      email: fromUser.signerEmail,
+    },
+    document: {
+      name: toTitleCase(attachment.name.split(".")?.[0] || "NA"),
+    },
+  };
 
-  sendDocumentLink({ subject, sendUrl, fromUser, signers });
+  const attachmentData = await getAttachmentFile(attachment);
+  const { sendUrl } = await createEmbbededDocument({ ...emailData, metaDetails, attachmentData });
+
+  sendDocumentLink({ metaDetails, subject, sendUrl, fromUser, signers });
 };
 
 module.exports = {
