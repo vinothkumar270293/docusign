@@ -15,8 +15,8 @@ const bindEvent = catchAsync(async (req, res) => {
     //
   }
 
-  logger.log('=== Webhook Bind ===');
-  logger.log(JSON.stringify(req.body));
+  logger.info('********** Webhook Bind **********');
+  logger.info(JSON.stringify(req.body));
 
   switch (event.eventType) {
     case 'Signed':
