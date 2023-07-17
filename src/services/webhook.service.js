@@ -147,10 +147,13 @@ const sendCompletedEmail = async ({ data }) => {
   const signedDocumentData = await getDocumentFile(documentId);
   const auditDocumentData = await getAuditFile(documentId);
 
-  const users = [...signerDetails];
-  const ccuser = ccDetails[0];
+  const users = [];
 
-  if (ccuser) users.push({ signerEmail: ccuser.emailAddress, signerName: ccuser.emailAddress.split('@')[0] });
+  if(signerDetails.length > 1)
+    users.push(...signerDetails);
+
+  const ccuser = ccDetails[0];
+  if (ccuser) users.push({ signerEmail: ccuser.emailAddress, signerName: metaData?.sender?.name || extractNameFromEmail(ccuser.emailAddress) });
 
   const documentPrefix = `${metaData?.document.name ? `${metaData?.document.name}_` : ''}`;
   for (let user of users) {
