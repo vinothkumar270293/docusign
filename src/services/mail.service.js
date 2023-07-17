@@ -109,7 +109,7 @@ const createEmbeddedDocument = async ({ attachmentData, subject, attachment, fro
 
 const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers, metaDetails }) => {
   const emailConfig = {
-    from: `Magicsign <support@${config.mailgun.emailDomain}>`,
+    from: `Magicsign <sign@${config.mailgun.emailDomain}>`,
     to: fromUser.signerEmail,
     subject: 'Create Sign Markers - Magicsign',
     html: templates.createSignTemplate({

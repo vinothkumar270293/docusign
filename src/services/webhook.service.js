@@ -112,7 +112,7 @@ const sendSignDocumentEmail = async ({ data }) => {
     if (metaData) message = `${metaData.sender.name} has requested to e-sign the ${metaData.document.name}`;
 
     const requestConfig = {
-      from: 'Magicsign <support@esign-inc.vakilsearch.com>',
+      from: 'Magicsign <sign@esign-inc.vakilsearch.com>',
       to: signer.signerEmail,
       subject: `Review and Sign ${metaData?.document?.name || messageTitle} - Magicsign`,
       html: templates.signTemplate({
@@ -155,7 +155,7 @@ const sendCompletedEmail = async ({ data }) => {
   const documentPrefix = `${metaData?.document.name ? `${metaData?.document.name}_` : ''}`;
   for (let user of users) {
     const requestConfig = {
-      from: `Vakilsearch <support@${config.mailgun.emailDomain}>`,
+      from: `Magicsign <sign@${config.mailgun.emailDomain}>`,
       to: user.signerEmail,
       subject: `Everyone has successfully completed ${data.messageTitle}`,
       html: templates.completedDocumentTemplate({
