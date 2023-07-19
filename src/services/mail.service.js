@@ -165,7 +165,7 @@ const createAndSendDocument = async (requestData) => {
       email: fromUser.signerEmail,
     },
     document: {
-      name: toTitleCase(attachment.name.split('.')?.[0] || 'NA'),
+      name: toTitleCase(attachment.name.split('.')?.[0] || ''),
     },
   };
 
