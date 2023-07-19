@@ -81,8 +81,8 @@ const createEmbeddedDocument = async ({ attachmentData, subject, attachment, fro
   data.append('Message', JSON.stringify(metaDetails));
   data.append('EnableSigningOrder', 'false');
   data.append('senderDetail.name', fromUser.signerName);
-  data.append('senderDetail,emailAddress', fromUser.signerEmail);
-
+  data.append('senderDetail.emailAddress', fromUser.signerEmail);
+  data.append('onBehalfOf', fromUser.signerEmail);
   signers.forEach((signUser, index) => {
     data.append(`Signers[${index}][Name]`, signUser.signerName);
     data.append(`Signers[${index}][EmailAddress]`, signUser.signerEmail);
