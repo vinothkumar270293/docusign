@@ -82,15 +82,15 @@ const createEmbeddedDocument = async ({ attachmentData, subject, attachment, fro
   data.append('EnableSigningOrder', 'false');
   data.append('senderDetail.name', fromUser.signerName);
   data.append('senderDetail.emailAddress', fromUser.signerEmail);
-  data.append('onBehalfOf', fromUser.signerEmail);
+  // data.append('onBehalfOf', fromUser.signerEmail);
   signers.forEach((signUser, index) => {
     data.append(`Signers[${index}][Name]`, signUser.signerName);
     data.append(`Signers[${index}][EmailAddress]`, signUser.signerEmail);
     data.append(`Signers[${index}][PrivateMessage]`, subject);
   });
 
-  // data.append(`CC[0][Name]`, fromUser.signerName);
-  // data.append(`CC[0][EmailAddress]`, fromUser.signerEmail);
+  data.append(`CC[0][Name]`, fromUser.signerName);
+  data.append(`CC[0][EmailAddress]`, fromUser.signerEmail);
 
   const requestConfig = {
     method: 'post',
@@ -171,7 +171,7 @@ const createAndSendDocument = async (requestData) => {
     },
   };
 
-  createSenderIdentity(metaDetails.sender);
+  // createSenderIdentity(metaDetails.sender);
   const attachmentData = await getAttachmentFile(attachment);
   const { sendUrl } = await createEmbeddedDocument({ ...emailData, metaDetails, attachmentData });
 
