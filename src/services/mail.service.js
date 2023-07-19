@@ -89,8 +89,8 @@ const createEmbeddedDocument = async ({ attachmentData, subject, attachment, fro
     data.append(`Signers[${index}][PrivateMessage]`, subject);
   });
 
-  data.append(`CC[0][Name]`, fromUser.signerName);
-  data.append(`CC[0][EmailAddress]`, fromUser.signerEmail);
+  // data.append(`CC[0][Name]`, fromUser.signerName);
+  // data.append(`CC[0][EmailAddress]`, fromUser.signerEmail);
 
   const requestConfig = {
     method: 'post',
@@ -136,6 +136,25 @@ const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers, metaDetai
   });
 };
 
+const createSenderIdentity = async (sender) => {
+  try {
+
+    const requestConfig = {
+      method: 'post',
+      url: `${config.boldsign.host}/v1/senderIdentities/create`,
+      headers: {
+        'X-API-KEY': config.boldsign.key,
+        ...data.getHeaders(),
+      },
+      data: sender,
+    };
+
+    await axios.request(requestConfig);
+  } catch (error) {
+    if (!error.response) logger.error(error);
+  }
+};
+
 const createAndSendDocument = async (requestData) => {
   const emailData = parseEmailData(requestData);
   const { subject, fromUser, signers, attachment } = emailData;
@@ -150,6 +169,7 @@ const createAndSendDocument = async (requestData) => {
     },
   };
 
+  createSenderIdentity(metaDetails.sender);
   const attachmentData = await getAttachmentFile(attachment);
   const { sendUrl } = await createEmbeddedDocument({ ...emailData, metaDetails, attachmentData });
 
