@@ -144,7 +144,6 @@ const createSenderIdentity = async (sender) => {
       url: `${config.boldsign.host}/v1/senderIdentities/create`,
       headers: {
         'X-API-KEY': config.boldsign.key,
-        ...data.getHeaders(),
       },
       data: sender,
     };
