@@ -151,7 +151,10 @@ const createSenderIdentity = async (sender) => {
 
     await axios.request(requestConfig);
   } catch (error) {
-    if (!error.response) logger.error(error);
+    if (error.response) 
+      logger.error(JSON.stringify(error.response.data))
+    else 
+      logger.error(error);
   }
 };
 
