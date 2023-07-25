@@ -5,14 +5,21 @@ const logger = require('../config/logger');
 const { webhookService } = require('../services');
 
 const bindEvent = catchAsync(async (req, res) => {
-
   const { event, data } = req.body;
 
   try {
     const parsed = JSON.parse(data.documentDescription);
     data.metaData = parsed;
   } catch (error) {
-    //
+    data.metaData = {
+      sender: {
+        senderName: extractNameFromEmail(data.ccDetails[0]?.emailAddress),
+        senderEmail: data.ccDetails[0]?.emailAddress,
+      },
+      document: {
+        name: data.messageTitle,
+      },
+    };
   }
 
   logger.info('********** Webhook Bind **********');

@@ -121,7 +121,7 @@ const sendSignDocumentEmail = async ({ data }) => {
         signerDetails,
         senderDetails: [
           {
-            senderName: metaData.sender?.name || extractNameFromEmail(metaData.sender?.name),
+            senderName: metaData.sender?.name || extractNameFromEmail(ccDetails[0]?.emailAddress),
             senderEmail: metaData.sender?.email || ccDetails[0]?.emailAddress,
           },
         ],
@@ -160,14 +160,16 @@ const sendCompletedEmail = async ({ data }) => {
     const requestConfig = {
       from: `Magicsign <sign@${config.mailgun.emailDomain}>`,
       to: user.signerEmail,
-      subject: `Everyone has successfully completed ${data.messageTitle}`,
+      subject: `Document successfully Signed and completed ${metaData?.document?.name || data.messageTitle}`,
       html: templates.completedDocumentTemplate({
         document: {
+          ...metaData.document,
           ...data,
           signerDetails: signedUsers,
           documentLink: `${config.website.host}/e-sign/?documentId=${data.documentId}`,
         },
         fromUser: user,
+        ...metaData
       }),
       attachment: [
         new mailgun.Attachment({

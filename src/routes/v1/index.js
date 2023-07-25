@@ -1,6 +1,4 @@
 const express = require('express');
-const authRoute = require('./auth.route');
-const userRoute = require('./user.route');
 const docsRoute = require('./docs.route');
 const documentRoute = require('./document.route');
 const webhookRoute = require('./webhook.route');
@@ -12,14 +10,6 @@ const config = require('../../config/config');
 const router = express.Router();
 
 const defaultRoutes = [
-  {
-    path: '/auth',
-    route: authRoute,
-  },
-  {
-    path: '/users',
-    route: userRoute,
-  },
   {
     path: '/document',
     route: documentRoute,
@@ -39,7 +29,6 @@ const defaultRoutes = [
 ];
 
 const devRoutes = [
-  // routes available only in development mode
   {
     path: '/docs',
     route: docsRoute,
