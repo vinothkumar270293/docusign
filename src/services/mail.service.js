@@ -68,7 +68,7 @@ const createEmbeddedDocument = async ({ attachmentData, subject, attachment, fro
     contentType: attachment['content-type'],
   });
 
-  data.append('Title', subject);
+  data.append('Title', metaDetails?.document.name);
   data.append('ShowToolbar', 'true');
   data.append('ShowNavigationButtons', 'true');
   data.append('ShowPreviewButton', 'true');
@@ -169,6 +169,9 @@ const createAndSendDocument = async (requestData) => {
     document: {
       name: toTitleCase(attachment.name.split('.')?.[0] || ''),
     },
+    email: {
+      subject
+    }
   };
 
   // createSenderIdentity(metaDetails.sender);
