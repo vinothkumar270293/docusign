@@ -77,7 +77,7 @@ const createEmbeddedDocument = async ({ attachmentData, subject, attachment, fro
   data.append('SendViewOption', 'PreparePage');
   data.append('disableEmails', 'true');
   data.append('Locale', 'EN');
-  data.append('RedirectUrl', `${config.website.host}/e-sign/complete`);
+  data.append('RedirectUrl', `${config.website.host}/e-sign/marker-complete`);
   data.append('Message', JSON.stringify(metaDetails));
   data.append('EnableSigningOrder', 'false');
   data.append('senderDetail.name', fromUser.signerName);
