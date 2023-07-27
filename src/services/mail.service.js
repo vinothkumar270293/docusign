@@ -20,7 +20,7 @@ const extractNameFromEmail = (email) => {
 };
 
 const extractUser = (email) => {
-  logger.log(email);
+  logger.info(email);
   const splitted = email.includes('&lt;') ? email.split('&lt;') : email.split('<');
   const signUser = {
     signerName: splitted[1] == null ? toTitleCase(splitted[0].split('@')[0]) : extractNameFromEmail(splitted[0]),
