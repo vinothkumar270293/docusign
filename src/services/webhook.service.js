@@ -162,6 +162,7 @@ const sendCompletedEmail = async ({ data }) => {
       to: user.signerEmail,
       subject: `${metaData?.document?.name || data.messageTitle} Document successfully Signed and completed`,
       html: templates.completedDocumentTemplate({
+        ...metaData,
         document: {
           ...metaData.document,
           ...data,
@@ -169,7 +170,6 @@ const sendCompletedEmail = async ({ data }) => {
           documentLink: `${config.website.host}/e-sign/?documentId=${data.documentId}`,
         },
         fromUser: user,
-        ...metaData
       }),
       attachment: [
         new mailgun.Attachment({
