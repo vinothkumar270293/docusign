@@ -4,6 +4,8 @@ function toTitleCase(str) {
     .trim()
     .split('_')
     .join(' ')
+    .split('.')
+    .join(' ')
     .split(' ')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');

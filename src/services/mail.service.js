@@ -16,13 +16,13 @@ const baseDir = path.resolve(__dirname, '..');
 
 const extractNameFromEmail = (email) => {
   const name = email.replace(/"/g, '').trim();
-  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  return toTitleCase(name);
 };
 
 const extractUser = (email) => {
   const splitted = email.includes('&lt;') ? email.split('&lt;') : email.split('<');
   const signUser = {
-    signerName: splitted[1] == null ? splitted[0].split('@')[0] : extractNameFromEmail(splitted[0]),
+    signerName: splitted[1] == null ? toTitleCase(splitted[0].split('@')[0]) : extractNameFromEmail(splitted[0]),
     signerEmail: (splitted[1] || splitted[0]).replace(/"/g, '').replace(/>/g, '').trim(),
   };
   return signUser;
