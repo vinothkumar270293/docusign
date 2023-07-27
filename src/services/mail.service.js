@@ -16,6 +16,8 @@ const baseDir = path.resolve(__dirname, '..');
 
 const extractNameFromEmail = (email) => {
   const name = email.replace(/"/g, '').trim();
+  if(name.includes('@'))
+    return toTitleCase(name.split('@')[0]);
   return toTitleCase(name);
 };
 
