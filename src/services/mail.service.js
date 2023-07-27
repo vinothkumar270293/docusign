@@ -112,7 +112,7 @@ const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers, metaDetai
   const emailConfig = {
     from: `Magicsign <sign@${config.mailgun.emailDomain}>`,
     to: fromUser.signerEmail,
-    subject: 'Create Sign Markers - Magicsign',
+    subject: 'Create Sign Markers',
     html: templates.createSignTemplate({
       signLink: `${config.website.host}/e-sign/view?${sendUrl.split('?')[1]}`,
       user: {

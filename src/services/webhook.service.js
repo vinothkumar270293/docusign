@@ -71,9 +71,9 @@ const sendSignedEmail = async ({ data }) => {
   const documentPrefix = `${metaData?.document.name ? `${metaData?.document.name}_` : ''}`;
 
   const requestData = {
-    from: `Magicsign <doc@${config.mailgun.emailDomain}>`,
+    from: `Magicsign <sign@${config.mailgun.emailDomain}>`,
     to: signer.signerEmail,
-    subject: `You have successfully signed ${data.messageTitle} - Magicsign`,
+    subject: `You have successfully signed ${data.messageTitle}`,
     html: templates.signedDocumentTemplate({
       document: data,
       documentLink: `${config.website.host}/e-sign/?${documentLink.split('?')[1]}}`,
@@ -114,7 +114,7 @@ const sendSignDocumentEmail = async ({ data }) => {
     const requestConfig = {
       from: 'Magicsign <sign@esign-inc.vakilsearch.com>',
       to: signer.signerEmail,
-      subject: `Review and Sign ${metaData?.document?.name || messageTitle} - Magicsign`,
+      subject: `Review and Sign ${metaData?.document?.name || messageTitle}`,
       html: templates.signTemplate({
         signLink: `${config.website.host}/e-sign/?${signLink.split('?')[1]}}`,
         user: signer,
@@ -160,7 +160,7 @@ const sendCompletedEmail = async ({ data }) => {
     const requestConfig = {
       from: `Magicsign <sign@${config.mailgun.emailDomain}>`,
       to: user.signerEmail,
-      subject: `${metaData?.document?.name || data.messageTitle} Document successfully Signed and completed`,
+      subject: `${metaData?.document?.name || data.messageTitle} Document successfully signed and completed`,
       html: templates.completedDocumentTemplate({
         ...metaData,
         document: {
