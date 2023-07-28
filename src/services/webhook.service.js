@@ -75,7 +75,8 @@ const sendSignedEmail = async ({ data }) => {
     to: signer.signerEmail,
     subject: `You have successfully signed ${data.messageTitle}`,
     html: templates.signedDocumentTemplate({
-      document: data,
+      ...metaData,
+      ...data,
       documentLink: `${config.website.host}/e-sign/?${documentLink.split('?')[1]}}`,
     }),
     attachment: new mailgun.Attachment({
@@ -116,6 +117,7 @@ const sendSignDocumentEmail = async ({ data }) => {
       to: signer.signerEmail,
       subject: `Review and Sign ${metaData?.document?.name || messageTitle}`,
       html: templates.signTemplate({
+        ...metaData,
         signLink: `${config.website.host}/e-sign/?${signLink.split('?')[1]}}`,
         user: signer,
         signerDetails,
@@ -128,7 +130,6 @@ const sendSignDocumentEmail = async ({ data }) => {
         expiryDate: moment.unix(data.expiryDate).format('DD-MM-YYYY HH:mm'),
         title: data.messageTitle,
         message,
-        ...metaData,
       }),
     };
 
