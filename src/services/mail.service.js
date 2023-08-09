@@ -16,6 +16,8 @@ const baseDir = path.resolve(__dirname, '..');
 
 const extractNameFromEmail = (email) => {
   const name = email.replace(/"/g, '').trim();
+  if(name.includes('@'))
+    return toTitleCase(name.split('@')[0]);
   return toTitleCase(name);
 };
 
@@ -114,6 +116,7 @@ const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers, metaDetai
     to: fromUser.signerEmail,
     subject: 'Create Sign Markers',
     html: templates.createSignTemplate({
+      ...metaDetails,
       signLink: `${config.website.host}/e-sign/view?${sendUrl.split('?')[1]}`,
       user: {
         ...fromUser,
@@ -126,7 +129,6 @@ const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers, metaDetai
           senderEmail: fromUser.signerName,
         },
       ],
-      ...metaDetails,
       subject,
     }),
   };
@@ -172,7 +174,8 @@ const createAndSendDocument = async (requestData) => {
       name: toTitleCase(attachment.name.split('.')?.[0] || ''),
     },
     email: {
-      subject
+      ...emailData,
+      subject,
     }
   };
 
