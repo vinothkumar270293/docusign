@@ -159,6 +159,7 @@ const createSenderIdentity = async (sender) => {
 };
 
 const createAndSendDocument = async (requestData) => {
+  logger.info(JSON.stringify(requestData));
   const emailData = parseEmailData(requestData);
   const { subject, fromUser, signers, attachment } = emailData;
 
