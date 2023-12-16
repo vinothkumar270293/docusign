@@ -168,7 +168,7 @@ const sendSignDocumentEmail = async ({ data }) => {
       subject: `Review and Sign ${metaData?.document?.name || messageTitle}`,
       html: templates.signTemplate({
         ...metaData,
-        signLink: `${config.website.host}e-sign/?${signLink.split('?')[1]}}`,
+        signLink: `${config.website.host}/e-sign/?${signLink.split('?')[1]}}`,
         user: signer,
         signerDetails,
         senderDetails: [
@@ -178,7 +178,7 @@ const sendSignDocumentEmail = async ({ data }) => {
           },
         ],
         expiryDate: moment.unix(data.expiryDate).format('DD-MM-YYYY HH:mm'),
-        title: data.messageTitle,
+        title: metaData.document.name,
         message,
       }),
     };
