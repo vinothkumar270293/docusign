@@ -145,7 +145,7 @@ const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers, metaDetai
 const sendSignDocumentEmail = async ({ data }) => {
   const { signerDetails, ccDetails, metaData } = data;
   for (let signer of signerDetails) {
-    const url = `${config.boldsign.host}/v1/document/getEmbeddedSignLink?documentId=${data.documentId}&signerEmail=${signer.signerEmail}&redirectUrl=${config.website.host}e-sign/complete`;
+    const url = `${config.boldsign.host}/v1/document/getEmbeddedSignLink?documentId=${data.documentId}&signerEmail=${signer.signerEmail}&redirectUrl=${config.website.host}/e-sign/complete`;
     const signLinkConfig = {
       method: 'get',
       maxBodyLength: Infinity,
