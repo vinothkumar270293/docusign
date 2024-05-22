@@ -116,6 +116,7 @@ const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers, metaDetai
     to: fromUser.signerEmail,
     subject: 'Create Sign Markers',
     html: templates.createSignTemplate({
+      ...metaDetails,
       signLink: `${config.website.host}/e-sign/view?${sendUrl.split('?')[1]}`,
       user: {
         ...fromUser,
@@ -128,7 +129,6 @@ const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers, metaDetai
           senderEmail: fromUser.signerName,
         },
       ],
-      ...metaDetails,
       subject,
     }),
   };

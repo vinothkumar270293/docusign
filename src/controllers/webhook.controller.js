@@ -30,7 +30,7 @@ const bindEvent = catchAsync(async (req, res) => {
       await webhookService.sendSignedEmail({ data });
       break;
     case 'Sent':
-      // await webhookService.sendSignDocumentEmail({ data });
+      await webhookService.sendSignDocumentEmail({ data });
       break;
     case 'Completed':
       await webhookService.sendCompletedEmail({ data });
