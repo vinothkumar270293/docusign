@@ -3,7 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const FormData = require('form-data');
 const httpStatus = require('http-status');
-const moment = require('moment');
 
 const ApiError = require('../utils/ApiError');
 const { toTitleCase } = require('../utils');
@@ -51,7 +50,6 @@ const parseEmailData = (requestData) => {
 };
 
 const getAttachmentFile = async (attachment) => {
- 
   const fileRequestConfig = {
     method: 'get',
     maxBodyLength: Infinity,
@@ -92,7 +90,6 @@ const createEmbeddedDocument = async ({ attachmentData, subject, attachment, fro
     data.append(`Signers[${index}][Name]`, signUser.signerName);
     data.append(`Signers[${index}][EmailAddress]`, signUser.signerEmail);
     data.append(`Signers[${index}][PrivateMessage]`, subject);
-    data.append(`Signers[${index}][AllowConfigureFields]`, 'true');
   });
 
   data.append(`CC[0][Name]`, fromUser.signerName);
@@ -101,7 +98,7 @@ const createEmbeddedDocument = async ({ attachmentData, subject, attachment, fro
   const requestConfig = {
     method: 'post',
     maxBodyLength: Infinity,
-    url: `${config.boldsign.host}/v1/document/send`,
+    url: `${config.boldsign.host}/v1/document/createEmbeddedRequestUrl`,
     headers: {
       'X-API-KEY': config.boldsign.key,
       ...data.getHeaders(),
@@ -119,7 +116,6 @@ const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers, metaDetai
     to: fromUser.signerEmail,
     subject: 'Create Sign Markers',
     html: templates.createSignTemplate({
-      ...metaDetails,
       signLink: `${config.website.host}/e-sign/view?${sendUrl.split('?')[1]}`,
       user: {
         ...fromUser,
@@ -132,6 +128,7 @@ const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers, metaDetai
           senderEmail: fromUser.signerName,
         },
       ],
+      ...metaDetails,
       subject,
     }),
   };
@@ -142,72 +139,26 @@ const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers, metaDetai
   });
 };
 
-const sendSignDocumentEmail = async ({ data }) => {
-  const { signerDetails, ccDetails, metaData } = data;
-  for (let signer of signerDetails) {
-    const url = `${config.boldsign.host}/v1/document/getEmbeddedSignLink?documentId=${data.documentId}&signerEmail=${signer.signerEmail}&redirectUrl=${config.website.host}/e-sign/complete`;
-    const signLinkConfig = {
-      method: 'get',
-      maxBodyLength: Infinity,
-      url,
-      headers: { 
-        'X-API-KEY': config.boldsign.key
-      }
-    };
-
-    const embeddedSignLinkResponse = await getSignLinkRequest(signLinkConfig)
-    const signLink = embeddedSignLinkResponse.data?.signLink;
-    if(!signLink) continue;
-    let message = `Review and Sign Document`;
-
-    if (metaData) message = `${metaData.sender.name} has requested to e-sign the ${metaData.document.name}`;
+const createSenderIdentity = async (sender) => {
+  try {
 
     const requestConfig = {
-      from: `Magicsign <sign@${config.mailgun.emailDomain}>`,
-      to: signer.signerEmail,
-      subject: `Review and Sign ${metaData?.document?.name || messageTitle}`,
-      html: templates.signTemplate({
-        ...metaData,
-        signLink: `${config.website.host}/e-sign/?${signLink.split('?')[1]}}`,
-        user: signer,
-        signerDetails,
-        senderDetails: [
-          {
-            senderName: metaData.sender?.name || extractNameFromEmail(ccDetails[0]?.emailAddress),
-            senderEmail: metaData.sender?.email || ccDetails[0]?.emailAddress,
-          },
-        ],
-        expiryDate: moment.unix(data.expiryDate).format('DD-MM-YYYY HH:mm'),
-        title: metaData.document.name,
-        message,
-      }),
+      method: 'post',
+      url: `${config.boldsign.host}/v1/senderIdentities/create`,
+      headers: {
+        'X-API-KEY': config.boldsign.key,
+      },
+      data: sender,
     };
 
-    mailgun.messages().send(requestConfig, (error, body) => {
-      if (error) logger.error(error);
-      else logger.debug('Email sent successfully:', body);
-    });
-
+    await axios.request(requestConfig);
+  } catch (error) {
+    if (error.response) 
+      logger.error(JSON.stringify(error.response.data))
+    else 
+      logger.error(error);
   }
 };
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-const retryCount = 5;
-const getSignLinkRequest = async (signLinkConfig) => {
-  for (let index = 0; index < retryCount; index++) {
-    try {
-      await sleep(1000);
-      const embeddedSignLinkResponse = await axios.request(signLinkConfig);
-      return embeddedSignLinkResponse;
-    } catch (error) {
-    }
-  }
-
-  return { data: {} }
-}
 
 const createAndSendDocument = async (requestData) => {
   logger.info(JSON.stringify(requestData));
@@ -223,17 +174,15 @@ const createAndSendDocument = async (requestData) => {
       name: toTitleCase(attachment.name.split('.')?.[0] || ''),
     },
     email: {
-      ...emailData,
-      subject,
+      subject
     }
   };
 
   // createSenderIdentity(metaDetails.sender);
   const attachmentData = await getAttachmentFile(attachment);
-  const responseData = await createEmbeddedDocument({ ...emailData, metaDetails, attachmentData });
-  const { documentId } = responseData;
-  await sendSignDocumentEmail({data: { documentId, signerDetails: signers,ccDetails: fromUser, metaData: metaDetails }});
-  // sendDocumentLink({ metaDetails, subject, documentId, fromUser, signers });
+  const { sendUrl } = await createEmbeddedDocument({ ...emailData, metaDetails, attachmentData });
+
+  sendDocumentLink({ metaDetails, subject, sendUrl, fromUser, signers });
 };
 
 module.exports = {

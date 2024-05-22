@@ -45,7 +45,7 @@ const sendDocumentFromFile = catchAsync(async (req, res) => {
   data.append('Signers[0][FormFields][0][Bounds][Height]', '32');
   data.append('Signers[0][FormFields][0][IsRequired]', 'true');
   data.append('Signers[0][authenticationCode]', '123');
-  data.append('CC[0].EmailAddress', 'dinesh20003456@gmail.com');
+  data.append('CC[0].EmailAddress', 'user@gmail.com');
   data.append('Files', fs.createReadStream(`${baseDir}/data/agreement.pdf`));
 
   let requestConfig = {
