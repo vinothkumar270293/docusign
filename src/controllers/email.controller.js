@@ -6,6 +6,12 @@ const handleSendDocument = catchAsync(async (req, res) => {
   res.json({ status: true, message: 'Success' });
 });
 
+const handleSignDocument = catchAsync(async (req, res) => {
+  await mailService.initiateSignDocument({...req.body, attachment: req.file});
+  res.json({ status: true, message: 'Success' });
+});
+
 module.exports = {
   handleSendDocument,
+  handleSignDocument
 };

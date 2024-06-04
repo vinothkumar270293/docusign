@@ -16,8 +16,7 @@ const baseDir = path.resolve(__dirname, '..');
 
 const extractNameFromEmail = (email) => {
   const name = email.replace(/"/g, '').trim();
-  if(name.includes('@'))
-    return toTitleCase(name.split('@')[0]);
+  if (name.includes('@')) return toTitleCase(name.split('@')[0]);
   return toTitleCase(name);
 };
 
@@ -141,7 +140,6 @@ const sendDocumentLink = async ({ subject, sendUrl, fromUser, signers, metaDetai
 
 const createSenderIdentity = async (sender) => {
   try {
-
     const requestConfig = {
       method: 'post',
       url: `${config.boldsign.host}/v1/senderIdentities/create`,
@@ -153,10 +151,8 @@ const createSenderIdentity = async (sender) => {
 
     await axios.request(requestConfig);
   } catch (error) {
-    if (error.response) 
-      logger.error(JSON.stringify(error.response.data))
-    else 
-      logger.error(error);
+    if (error.response) logger.error(JSON.stringify(error.response.data));
+    else logger.error(error);
   }
 };
 
@@ -174,8 +170,8 @@ const createAndSendDocument = async (requestData) => {
       name: toTitleCase(attachment.name.split('.')?.[0] || ''),
     },
     email: {
-      subject
-    }
+      subject,
+    },
   };
 
   // createSenderIdentity(metaDetails.sender);
@@ -185,7 +181,52 @@ const createAndSendDocument = async (requestData) => {
   sendDocumentLink({ metaDetails, subject, sendUrl, fromUser, signers });
 };
 
+const getEmailData = (emailData) => {
+  const { from, to, attachment, subject, fileName } = emailData;
+
+  if (!from) throw new ApiError(httpStatus.BAD_REQUEST, 'From email not found');
+  if (!to) throw new ApiError(httpStatus.BAD_REQUEST, 'To email not found');
+  if (!attachment) throw new ApiError(httpStatus.BAD_REQUEST, 'Attachment not found');
+
+  const fromUser = {
+    signerName: `${toTitleCase(from.split('@')[0])}`,
+    signerEmail: from
+  };
+
+  const signers = [{ signerName: toTitleCase(to.split('@')[0]), signerEmail: to}]
+
+  if (signers.length === 0) throw new ApiError(httpStatus.BAD_REQUEST, 'Include at least one receiver');
+
+
+  return { fromUser, signers, attachment, subject, fileName };
+};
+
+const initiateSignDocument = async (requestData) => {
+
+  const emailData = getEmailData(requestData);
+  const { subject = 'eSign PDF Request', fromUser, signers, attachment, fileName } = emailData;
+
+  const docName = fileName.split('.')[0];
+  const metaDetails = {
+    sender: {
+      name: fromUser.signerName,
+      email: fromUser.signerEmail,
+    },
+    document: {
+      name: toTitleCase(docName),
+    },
+    email: {
+      subject,
+    },
+  };
+
+  const { sendUrl } = await createEmbeddedDocument({ ...emailData, metaDetails, attachment: {name: attachment.originalname, 'content-type': attachment.mimetype} , attachmentData: attachment.buffer });
+
+  sendDocumentLink({ metaDetails, subject, sendUrl, fromUser, signers });
+};
+
 module.exports = {
   createAndSendDocument,
   extractNameFromEmail,
+  initiateSignDocument,
 };
