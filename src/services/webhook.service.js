@@ -4,6 +4,7 @@ const moment = require('moment');
 const mailgun = require('../config/emailer');
 const config = require('../config/config');
 const logger = require('../config/logger');
+const mongoService = require('../services/mongodb.service')
 
 const templates = require('../templates');
 
@@ -189,6 +190,10 @@ const sendCompletedEmail = async ({ data }) => {
       else logger.debug('Email sent successfully:', body);
     });
   }
+
+  //Change status to completed in the mongoDB for the documentID
+  mongoService.updateStatusByDocId(documentId,'signed')
+
 };
 
 module.exports = {

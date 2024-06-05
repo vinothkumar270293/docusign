@@ -82,19 +82,19 @@ module.exports.getRecordByCompanyIdAndTicketId = async (companyId, ticketId) => 
     }
 };
 
-// Function to update the status in MongoDB collection based on docId
-module.exports.updateStatusByDocId = async (docId, status) => {
+// Function to update the status in MongoDB collection based on documentId
+module.exports.updateStatusByDocId = async (documentId, status) => {
     const client = new MongoClient(url, { useUnifiedTopology: true });
     try {
         await client.connect();
         const db = client.db(dbName);
         const collection = db.collection(collectionName);
-        // Update the status of the document with the provided docId
-        const result = await collection.updateOne({ docId: docId }, { $set: { status: status } });
+        // Update the status of the document with the provided documentId
+        const result = await collection.updateOne({ documentId: documentId }, { $set: { status: status } });
         if (result.modifiedCount === 1) {
-            console.log(`Status updated for document with docId ${docId}.`);
+            console.log(`Status updated for document with docId ${documentId}.`);
         } else {
-            console.log(`Document with docId ${docId} not found or status is already '${status}'.`);
+            console.log(`Document with documentId ${documentId} not found or status is already '${status}'.`);
         }
     } catch (err) {
         console.error("Error while updating status:", err);

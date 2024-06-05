@@ -11,6 +11,7 @@ const logger = require('../config/logger');
 const config = require('../config/config');
 const mailgun = require('../config/emailer');
 const templates = require('../templates');
+const mongoService = require('../services/mongodb.service')
 
 const baseDir = path.resolve(__dirname, '..');
 
@@ -182,11 +183,13 @@ const createAndSendDocument = async (requestData) => {
 };
 
 const getEmailData = (emailData) => {
-  const { from, to, attachment, subject, fileName } = emailData;
+  const { from, to, attachment, subject, fileName, companyId,ticketId } = emailData;
 
   if (!from) throw new ApiError(httpStatus.BAD_REQUEST, 'From email not found');
   if (!to) throw new ApiError(httpStatus.BAD_REQUEST, 'To email not found');
   if (!attachment) throw new ApiError(httpStatus.BAD_REQUEST, 'Attachment not found');
+  if (!companyId) throw new ApiError(httpStatus.BAD_REQUEST, 'companyId not found');
+  if (!ticketId) throw new ApiError(httpStatus.BAD_REQUEST, 'ticketId not found');
 
   const fromUser = {
     signerName: `${toTitleCase(from.split('@')[0])}`,
@@ -198,13 +201,14 @@ const getEmailData = (emailData) => {
   if (signers.length === 0) throw new ApiError(httpStatus.BAD_REQUEST, 'Include at least one receiver');
 
 
-  return { fromUser, signers, attachment, subject, fileName };
+  return { fromUser, signers, attachment, subject, fileName, companyId, ticketId };
 };
 
 const initiateSignDocument = async (requestData) => {
 
   const emailData = getEmailData(requestData);
-  const { subject = 'eSign PDF Request', fromUser, signers, attachment, fileName } = emailData;
+  // console.log(emailData)
+  const { subject = 'eSign PDF Request', fromUser, signers, attachment, fileName,companyId,ticketId } = emailData;
 
   const docName = fileName.split('.')[0];
   const metaDetails = {
@@ -220,9 +224,17 @@ const initiateSignDocument = async (requestData) => {
     },
   };
 
-  const  docDetails  = await createEmbeddedDocument({ ...emailData, metaDetails, attachment: {name: attachment.originalname, 'content-type': attachment.mimetype} , attachmentData: attachment.buffer });
-console.log(docDetails)
+  const {documentId, sendUrl}   = await createEmbeddedDocument({ ...emailData, metaDetails, attachment: {name: attachment.originalname, 'content-type': attachment.mimetype} , attachmentData: attachment.buffer });
+ 
   sendDocumentLink({ metaDetails, subject, sendUrl, fromUser, signers });
+
+  // push docDetails to mongoDb
+ 
+ const docDetails = [{companyId,ticketId,fromUser,signers,subject,fileName,documentId,sendUrl,status:'draft'}]
+
+ mongoService.pushRecords(docDetails)
+
+
 };
 
 module.exports = {
