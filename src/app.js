@@ -13,6 +13,7 @@ const { authLimiter } = require('./middlewares/rateLimiter');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler } = require('./middlewares/error');
 const ApiError = require('./utils/ApiError');
+const mongoService = require('./services/mongodb.service')
 
 const app = express();
 
@@ -63,5 +64,20 @@ app.use(errorConverter);
 
 // handle error
 app.use(errorHandler);
+
+mongoService.createDatabase();
+
+// const json = [{companyId:1,
+//   ticketId:1,
+//   docId:1,
+//   status:'draft'
+// }]
+// mongoService.pushRecords(json)
+
+// mongoService.getRecordByCompanyIdAndTicketId(1,1)
+
+// mongoService.updateStatusByDocId(1,'Failed')
+
+
 
 module.exports = app;

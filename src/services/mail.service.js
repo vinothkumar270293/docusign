@@ -220,8 +220,8 @@ const initiateSignDocument = async (requestData) => {
     },
   };
 
-  const { sendUrl } = await createEmbeddedDocument({ ...emailData, metaDetails, attachment: {name: attachment.originalname, 'content-type': attachment.mimetype} , attachmentData: attachment.buffer });
-
+  const  docDetails  = await createEmbeddedDocument({ ...emailData, metaDetails, attachment: {name: attachment.originalname, 'content-type': attachment.mimetype} , attachmentData: attachment.buffer });
+console.log(docDetails)
   sendDocumentLink({ metaDetails, subject, sendUrl, fromUser, signers });
 };
 
